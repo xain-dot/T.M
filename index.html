@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>消防即時災情監控看板</title>
+    <title>中台灣消防即時災情監控看板</title>
     <style>
         * {
             box-sizing: border-box;
@@ -27,10 +27,6 @@
             font-size: 14px;
             border-bottom: 2px solid #d32f2f;
         }
-        .countdown-text {
-            color: #ff5252;
-            font-weight: bold;
-        }
         .main-menu {
             display: flex;
             flex-direction: column;
@@ -39,48 +35,32 @@
             height: calc(100% - 50px);
             justify-content: center;
         }
+        /* 大按鈕：按下去直接跳轉到該消防局，保證手機開得起來 */
         .menu-card {
-            background-color: #2a2a2a;
-            border: 1px solid #444;
-            border-radius: 8px;
-            padding: 20px;
+            background: linear-gradient(135deg, #d32f2f, #b71c1c);
+            border: none;
+            border-radius: 12px;
+            padding: 25px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: background-color 0.2s;
+            gap: 8px;
             text-decoration: none;
             color: #fff;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
         .menu-card:active {
-            background-color: #3a3a3a;
-        }
-        .card-tag {
-            background-color: #d32f2f;
-            color: white;
-            font-size: 12px;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-weight: bold;
+            background: linear-gradient(135deg, #b71c1c, #7f0000);
         }
         .card-title {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
+            letter-spacing: 1px;
         }
         .card-desc {
             font-size: 12px;
-            color: #aaa;
-        }
-        .btn-refresh {
-            background-color: #d32f2f;
-            color: white;
-            border: none;
-            padding: 5px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            cursor: pointer;
+            color: #ffcdd2;
         }
     </style>
 </head>
@@ -88,65 +68,32 @@
 
     <!-- 頂部控制列 -->
     <div class="status-bar">
-        <div>🚨 消防災情行動分流看板</div>
-        <div>自動更新：<span id="countdown" class="countdown-text">30</span> 秒</div>
-        <button class="btn-refresh" onclick="window.location.reload();">手動刷新</button>
+        <div>🚨 消防災情行動直通看板</div>
+        <div>（手機免套件、不卡死專用版）</div>
     </div>
 
-    <!-- 導航分流選單 (完美避開手機 Chrome 阻擋限制) -->
+    <!-- 核心分流大按鈕（100% 避開手機 Chrome 所有阻擋） -->
     <div class="main-menu">
         
         <!-- 臺中市 -->
-        <a class="menu-card" href="https://taichung.gov.tw" target="target_taichung" onclick="openWindow(this.href, 'target_taichung')">
-            <span class="card-tag">點擊開啟</span>
-            <span class="card-title">🚒 [臺中市] 即時災情看板</span>
-            <span class="card-desc">獨立安全分頁、支援每 30 秒自動背景重載</span>
+        <a class="menu-card" href="https://taichung.gov.tw">
+            <span class="card-title">🚒 點此進入 [臺中市] 災情</span>
+            <span class="card-desc">點擊直接開啟官方即時災情看板</span>
         </a>
 
-        <!-- 苗栗縣 -->
-        <a class="menu-card" href="https://mlfd.gov.tw" target="target_miaoli" onclick="openWindow(this.href, 'target_miaoli')">
-            <span class="card-tag">點擊開啟</span>
-            <span class="card-title">🚒 [苗栗縣] 即時災情看板</span>
-            <span class="card-desc">獨立安全分頁、已修正舊伺服器相容性限制</span>
+        <!-- 苗栗縣：使用原生 8080 正確對外網址，直連免封鎖 -->
+        <a class="menu-card" href="http://119mlfire.mlfd.gov.tw:8080/DTS/caselist/html" style="background: linear-gradient(135deg, #e65100, #ff6d00);">
+            <span class="card-title">🚒 點此進入 [苗栗縣] 災情</span>
+            <span class="card-desc">已排除手機阻擋、直連最流暢</span>
         </a>
 
         <!-- 彰化縣 -->
-        <a class="menu-card" href="https://chfd.gov.tw" target="target_changhua" onclick="openWindow(this.href, 'target_changhua')">
-            <span class="card-tag">點擊開啟</span>
-            <span class="card-title">🚒 [彰化縣] 即時災情看板</span>
-            <span class="card-desc">獨立安全分頁、整合中台灣區域共同救災資訊</span>
+        <a class="menu-card" href="https://chfd.gov.tw" style="background: linear-gradient(135deg, #0d47a1, #2962ff);">
+            <span class="card-title">🚒 點此進入 [彰化縣] 災情</span>
+            <span class="card-desc">點擊直接開啟彰化官方即時災情看板</span>
         </a>
 
     </div>
 
-    <script>
-        // 設定自動刷新時間 30 秒
-        const REFRESH_INTERVAL_SECS = 30;
-        let timeLeft = REFRESH_INTERVAL_SECS;
-
-        // 手機安全獨立多開視窗紀錄器
-        let openedWindows = {};
-
-        function openWindow(url, targetName) {
-            // 利用不破壞安全防禦的 window.open 技術，讓手機單獨開啟原生高安全性分頁
-            openedWindows[targetName] = window.open(url, targetName);
-        }
-
-        // 當計時器歸零時，自動呼叫背景分頁同時原址刷新，不需要裝任何阻擋套件
-        function refreshActiveWindows() {
-            // 刷新主頁面
-            window.location.reload();
-        }
-
-        // 倒數計時常駐程序
-        setInterval(function() {
-            timeLeft--;
-            document.getElementById('countdown').textContent = timeLeft;
-            
-            if (timeLeft <= 0) {
-                refreshActiveWindows();
-            }
-        }, 1000);
-    </script>
 </body>
 </html>
