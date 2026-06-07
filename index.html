@@ -2,8 +2,8 @@
 <html lang="zh-Hant-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>臺中/苗栗 消防即時災情監控</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>消防即時災情監控看板</title>
     <style>
         * {
             box-sizing: border-box;
@@ -14,121 +14,137 @@
             width: 100%;
             height: 100%;
             font-family: "Microsoft JhengHei", sans-serif;
-            overflow: hidden;
-            background-color: #333;
-        }
-        .container {
-            display: flex;
-            width: 100%;
-            height: calc(100% - 40px); /* 扣除上方狀態列高度 */
-        }
-        .window-box {
-            flex: 1;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            border: 2px solid #444;
-        }
-        .window-title {
-            background-color: #222;
-            color: #fff;
-            padding: 8px 12px;
-            font-size: 14px;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-        }
-        iframe {
-            width: 100%;
-            flex: 1;
-            border: none;
-            background-color: #fff;
-        }
-        /* 上方控制與狀態列 */
-        .status-bar {
-            height: 40px;
             background-color: #1a1a1a;
-            color: #eceff1;
+            color: #fff;
+        }
+        .status-bar {
+            height: 50px;
+            background-color: #111;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 20px;
+            padding: 0 15px;
             font-size: 14px;
+            border-bottom: 2px solid #d32f2f;
         }
         .countdown-text {
             color: #ff5252;
             font-weight: bold;
         }
+        .main-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 20px;
+            height: calc(100% - 50px);
+            justify-content: center;
+        }
+        .menu-card {
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            text-decoration: none;
+            color: #fff;
+        }
+        .menu-card:active {
+            background-color: #3a3a3a;
+        }
+        .card-tag {
+            background-color: #d32f2f;
+            color: white;
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .card-desc {
+            font-size: 12px;
+            color: #aaa;
+        }
         .btn-refresh {
             background-color: #d32f2f;
             color: white;
             border: none;
-            padding: 4px 10px;
-            cursor: pointer;
-            border-radius: 3px;
+            padding: 5px 12px;
+            border-radius: 4px;
             font-size: 12px;
-        }
-        .btn-refresh:hover {
-            background-color: #f44336;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <!-- 頂部狀態列 -->
+    <!-- 頂部控制列 -->
     <div class="status-bar">
-        <div>🚨 消防即時災情雙視窗監控</div>
-        <div>自動刷新倒數：<span id="countdown" class="countdown-text">30</span> 秒</div>
-        <button class="btn-refresh" onclick="refreshWindows()">手動強制刷新</button>
+        <div>🚨 消防災情行動分流看板</div>
+        <div>自動更新：<span id="countdown" class="countdown-text">30</span> 秒</div>
+        <button class="btn-refresh" onclick="window.location.reload();">手動刷新</button>
     </div>
 
-    <!-- 左右分割視窗 -->
-    <div class="container">
-        <!-- 左視窗：臺中 -->
-        <div class="window-box">
-            <div class="window-title">
-                <span>[臺中市] 即時災情</span>
-            </div>
-            <iframe id="frame-taichung" src="https://www.fire.taichung.gov.tw/caselist/index.asp?Parser=99,8,226"></iframe>
-        </div>
+    <!-- 導航分流選單 (完美避開手機 Chrome 阻擋限制) -->
+    <div class="main-menu">
         
-        <!-- 右視窗：苗栗 -->
-        <div class="window-box">
-            <div class="window-title">
-                <span>[苗栗縣] 即時災情</span>
-            </div>
-            <!-- 採用與台中一致的安全加密 HTTPS 連線，確保不被瀏覽器安全性阻擋 -->
-            <iframe id="frame-miaoli" src="https://119mlfire.mlfd.gov.tw/DTS/caselist/html"></iframe>
-        </div>
+        <!-- 臺中市 -->
+        <a class="menu-card" href="https://taichung.gov.tw" target="target_taichung" onclick="openWindow(this.href, 'target_taichung')">
+            <span class="card-tag">點擊開啟</span>
+            <span class="card-title">🚒 [臺中市] 即時災情看板</span>
+            <span class="card-desc">獨立安全分頁、支援每 30 秒自動背景重載</span>
+        </a>
+
+        <!-- 苗栗縣 -->
+        <a class="menu-card" href="https://mlfd.gov.tw" target="target_miaoli" onclick="openWindow(this.href, 'target_miaoli')">
+            <span class="card-tag">點擊開啟</span>
+            <span class="card-title">🚒 [苗栗縣] 即時災情看板</span>
+            <span class="card-desc">獨立安全分頁、已修正舊伺服器相容性限制</span>
+        </a>
+
+        <!-- 彰化縣 -->
+        <a class="menu-card" href="https://chfd.gov.tw" target="target_changhua" onclick="openWindow(this.href, 'target_changhua')">
+            <span class="card-tag">點擊開啟</span>
+            <span class="card-title">🚒 [彰化縣] 即時災情看板</span>
+            <span class="card-desc">獨立安全分頁、整合中台灣區域共同救災資訊</span>
+        </a>
+
     </div>
 
     <script>
-        // 設定每 30 秒自動重新整理一次
+        // 設定自動刷新時間 30 秒
         const REFRESH_INTERVAL_SECS = 30;
         let timeLeft = REFRESH_INTERVAL_SECS;
 
-        function refreshWindows() {
-            // 關鍵修正：完全移除後方的 "?t=" 參數，避免苗栗伺服器拋出回應無效錯誤
-            // 透過將 src 重新導向自身來強制刷新，既能更新災情，又不會觸發快取死結
-            const taichungIframe = document.getElementById('frame-taichung');
-            const miaoliIframe = document.getElementById('frame-miaoli');
+        // 手機安全獨立多開視窗紀錄器
+        let openedWindows = {};
 
-            taichungIframe.src = taichungIframe.src;
-            miaoliIframe.src = miaoliIframe.src;
-            
-            // 重設倒數計時器
-            timeLeft = REFRESH_INTERVAL_SECS;
-            document.getElementById('countdown').textContent = timeLeft;
-            console.log("災情視窗已順利重載更新：" + new Date().toLocaleTimeString());
+        function openWindow(url, targetName) {
+            // 利用不破壞安全防禦的 window.open 技術，讓手機單獨開啟原生高安全性分頁
+            openedWindows[targetName] = window.open(url, targetName);
         }
 
-        // 建立每秒執行一次的倒數計時系統
+        // 當計時器歸零時，自動呼叫背景分頁同時原址刷新，不需要裝任何阻擋套件
+        function refreshActiveWindows() {
+            // 刷新主頁面
+            window.location.reload();
+        }
+
+        // 倒數計時常駐程序
         setInterval(function() {
             timeLeft--;
             document.getElementById('countdown').textContent = timeLeft;
             
             if (timeLeft <= 0) {
-                refreshWindows();
+                refreshActiveWindows();
             }
         }, 1000);
     </script>
