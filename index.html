@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>臺中/苗栗 消防即時災情監控</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
+            font-family: "Microsoft JhengHei", sans-serif;
+            overflow: hidden;
+            background-color: #333;
+        }
+        .container {
+            display: flex;
+            width: 100%;
+            height: calc(100% - 40px); /* 扣除上方狀態列高度 */
+        }
+        .window-box {
+            flex: 1;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            border: 2px solid #444;
+        }
+        .window-title {
+            background-color: #222;
+            color: #fff;
+            padding: 8px 12px;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+        iframe {
+            width: 100%;
+            flex: 1;
+            border: none;
+            background-color: #fff;
+        }
+        /* 上方控制與狀態列 */
+        .status-bar {
+            height: 40px;
+            background-color: #1a1a1a;
+            color: #eceff1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            font-size: 14px;
+        }
+        .countdown-text {
+            color: #ff5252;
+            font-weight: bold;
+        }
+        .btn-refresh {
+            background-color: #d32f2f;
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .btn-refresh:hover {
+            background-color: #f44336;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 頂部狀態列 -->
+    <div class="status-bar">
+        <div>🚨 消防即時災情雙視窗監控</div>
+        <div>自動刷新倒數：<span id="countdown" class="countdown-text">30</span> 秒</div>
+        <button class="btn-refresh" onclick="refreshWindows()">手動強制刷新</button>
+    </div>
+
+    <!-- 左右分割視窗 -->
+    <div class="container">
+        <!-- 左視窗：臺中 -->
+        <div class="window-box">
+            <div class="window-title">
+                <span>[臺中市] 即時災情</span>
+            </div>
+            <iframe id="frame-taichung" src="https://www.fire.taichung.gov.tw/caselist/index.asp?Parser=99,8,226"></iframe>
+        </div>
+        
+        <!-- 右視窗：苗栗 -->
+        <div class="window-box">
+            <div class="window-title">
+                <span>[苗栗縣] 即時災情</span>
+            </div>
+            <!-- 採用與台中一致的安全加密 HTTPS 連線，確保不被瀏覽器安全性阻擋 -->
+            <iframe id="frame-miaoli" src="https://119mlfire.mlfd.gov.tw/DTS/caselist/html"></iframe>
+        </div>
+    </div>
+
+    <script>
+        // 設定每 30 秒自動重新整理一次
+        const REFRESH_INTERVAL_SECS = 30;
+        let timeLeft = REFRESH_INTERVAL_SECS;
+
+        function refreshWindows() {
+            // 關鍵修正：完全移除後方的 "?t=" 參數，避免苗栗伺服器拋出回應無效錯誤
+            // 透過將 src 重新導向自身來強制刷新，既能更新災情，又不會觸發快取死結
+            const taichungIframe = document.getElementById('frame-taichung');
+            const miaoliIframe = document.getElementById('frame-miaoli');
+
+            taichungIframe.src = taichungIframe.src;
+            miaoliIframe.src = miaoliIframe.src;
+            
+            // 重設倒數計時器
+            timeLeft = REFRESH_INTERVAL_SECS;
+            document.getElementById('countdown').textContent = timeLeft;
+            console.log("災情視窗已順利重載更新：" + new Date().toLocaleTimeString());
+        }
+
+        // 建立每秒執行一次的倒數計時系統
+        setInterval(function() {
+            timeLeft--;
+            document.getElementById('countdown').textContent = timeLeft;
+            
+            if (timeLeft <= 0) {
+                refreshWindows();
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
